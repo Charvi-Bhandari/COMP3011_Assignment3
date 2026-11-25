@@ -50,6 +50,7 @@ public class VideoPlayerModel {
     private volatile  long playbackGeneration = 0;
 
     private final List<FrameProcessor> frameProcessors;
+    private FrameSubtitler subtitleProcessor; // Reference to the subtitle processor
     private final Queue<PendingAudio> pendingAudio =
             new java.util.concurrent.ConcurrentLinkedQueue<>();
     private final BiConsumer<Integer, Integer> videoSizeChangedHandler;
@@ -111,6 +112,15 @@ public class VideoPlayerModel {
         this.playbackStateChangedHandler = playbackStateChangedHandler;
         this.audioOutputStateChangedHandler = audioOutputStateChangedHandler;
         this.frameProcessors = new ArrayList<>(frameProcessors);
+        
+     // Reuse the same processor instance so toggling subtitles
+     // changes the state of the processor used by the frame worker.
+     for (FrameProcessor processor : this.frameProcessors) {
+         if (processor instanceof FrameSubtitler) {
+             subtitleProcessor = (FrameSubtitler) processor;
+             break;
+         }
+     }
 //        frameProcessors.add(new FrameBleeder());
 //        frameProcessors.add(new FrameScratcher());
 //        frameProcessors.add(new FrameDuster());
@@ -121,6 +131,20 @@ public class VideoPlayerModel {
 //        frameProcessors.add(new FrameFlickerer());
 //        frameProcessors.add(new FrameJitterer());
 //        frameProcessors.add(new FrameNumberer());
+    }
+    
+    public boolean isSubtitlesEnabled() {
+        return subtitleProcessor != null
+                && subtitleProcessor.isEnabled();
+    }
+
+    // Change the subtitle state without restarting playback
+    // or modifying the list of active frame processors.
+    public void toggleSubtitles() {
+        if (subtitleProcessor != null) {
+            subtitleProcessor.setEnabled(
+                    !subtitleProcessor.isEnabled());
+        }
     }
 
     public void play(File file) {

@@ -165,9 +165,9 @@ public class VideoPlayerView {
     }
 
     // There are a bunch of tooltip handling methods starting from here. We want to use tooltips so that people with
-    // mouse/trackpads can learn what the hotkeys are and hopefully just use them instead, because they are easy/fast.
+    // mouse/track pads can learn what the hot keys are and hopefully just use them instead, because they are easy/fast.
     private void setButtonTooltips() {
-        setButtonTooltip(startOverButton, "[HOME]");
+        setButtonTooltip(startOverButton, "[HOME]"); 
         setButtonTooltip(backFiveButton, "[LEFT]");
         setButtonTooltip(pausePlayButton, "[SPACE]");
         setButtonTooltip(forwardFiveButton, "[RIGHT]");
