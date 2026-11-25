@@ -24,8 +24,9 @@ public class FrameSubtitler extends FrameProcessor  {
 	        subtitleManager.setSubtitles(List.of(
 	            new Subtitle(0, 3, "This is the Temporaryy subtitle."), // Temporary subtitle data for testing playback synchronisation
 	            new Subtitle(4, 7, "subtitlllleeeee"),
-	            new Subtitle(8,12, "Simpsons Trailer..."),
-	            new Subtitle(13, 17, "Testing, last subtitle..")
+	            new Subtitle(8,12, "Simpsons Trailer..."),	      
+	            new Subtitle(13, 17, "Testing, last subtitle.."),
+	            new Subtitle(20, 24, "SIKE! This is a longer subtitle that needs to be displayed across two lines.")
 	        ));
 	    }
 	    
@@ -79,24 +80,38 @@ public class FrameSubtitler extends FrameProcessor  {
 
             Font font = new Font("SansSerif", Font.PLAIN, fontSize);
             graphics.setFont(font);
+         
+            List<String> lines = SubtitleFormatter.wrapText(text); 
 
-            int textWidth = graphics.getFontMetrics().stringWidth(text);
+            int lineCount = Math.min(2, lines.size()); // Wrap subtitles and limit the display to two lines.
+            int lineHeight = graphics.getFontMetrics().getHeight();
 
-            int x = (image.getWidth() - textWidth) / 2;
-            int y = image.getHeight() - fontSize;
+            // Position the subtitles at the bottom of the frame.
+            int y = image.getHeight() - fontSize
+                    - (lineCount - 1) * lineHeight;
 
-            GlyphVector glyph = font.createGlyphVector(
-                    graphics.getFontRenderContext(), text);
+            for (int i = 0; i < lineCount; i++) {
+                String line = lines.get(i);
 
-            Shape outline = glyph.getOutline(x, y);
+                // Centre each line horizontally.
+                int textWidth = graphics.getFontMetrics().stringWidth(line);
+                int x = (image.getWidth() - textWidth) / 2;
 
-            // Draw the black outline before filling the white text.
-            graphics.setColor(Color.BLACK);
-            graphics.setStroke(new BasicStroke(3));
-            graphics.draw(outline);
+                GlyphVector glyph = font.createGlyphVector(
+                        graphics.getFontRenderContext(), line);
 
-            graphics.setColor(Color.WHITE);
-            graphics.fill(outline);
+                Shape outline = glyph.getOutline(x, y);
+
+                // Draw the black outline before filling the white text.
+                graphics.setColor(Color.BLACK);
+                graphics.setStroke(new BasicStroke(3));
+                graphics.draw(outline);
+                graphics.setColor(Color.WHITE);
+                graphics.fill(outline);
+
+                // Move down to the next line.
+                y += lineHeight;
+            }
 
         } finally {
             graphics.dispose();
