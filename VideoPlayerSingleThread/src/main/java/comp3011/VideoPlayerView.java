@@ -57,6 +57,7 @@ public class VideoPlayerView {
     private final Button forwardFiveButton;
     private final Button stopButton;
     private final Button audioButton;
+    private final Button subtitleButton;
 
     public VideoPlayerView() {
         imageView.setPreserveRatio(true);
@@ -75,6 +76,7 @@ public class VideoPlayerView {
         forwardFiveButton = iconButton(createLoopIcon(true, "5"));
         stopButton = iconButton(createStopIcon());
         audioButton = iconButton(createAudioIcon(false));
+        subtitleButton = iconButton(createSubtitleIcon(false)); // Design same to keep consistency in look
         setPlaybackControlsDisabled(true);
 
         HBox controls = new HBox(
@@ -85,6 +87,7 @@ public class VideoPlayerView {
                 forwardFiveButton,
                 stopButton,
                 audioButton,
+                subtitleButton,
                 statusLabel);
 
         controls.setPadding(new Insets(10));
@@ -158,6 +161,7 @@ public class VideoPlayerView {
         forwardFiveButton.setDisable(disabled);
         stopButton.setDisable(disabled);
         audioButton.setDisable(disabled);
+        subtitleButton.setDisable(disabled);
     }
 
     // There are a bunch of tooltip handling methods starting from here. We want to use tooltips so that people with
@@ -169,6 +173,7 @@ public class VideoPlayerView {
         setButtonTooltip(forwardFiveButton, "[RIGHT]");
         setButtonTooltip(stopButton, "[ESC]");
         setButtonTooltip(audioButton, "[A]");
+        setButtonTooltip(subtitleButton, "[S]");
     }
 
     private void setButtonTooltip(Button button, String text) {
@@ -337,6 +342,40 @@ public class VideoPlayerView {
 
         return pane;
     }
+    
+    // Creates a caption button with a slash when subtitles are off.
+    // Chose Canvas because of simplicity and button design was simpler 
+    //and doesnt need individual shapes
+    private Node createSubtitleIcon(boolean enabled) {
+        Canvas canvas = new Canvas(ICON_SIZE, ICON_SIZE); 
+        GraphicsContext gc = canvas.getGraphicsContext2D();
+
+        gc.setStroke(Color.BLACK);
+        gc.setLineWidth(1.5);
+
+        gc.strokeRoundRect(3, 6, 22, 16, 3, 3);
+
+        gc.setFill(Color.BLACK);
+        gc.setFont(javafx.scene.text.Font.font(12));
+        gc.fillText("SUB", 5, 18); // might change the design later 
+
+        if (!enabled) {
+            gc.setLineWidth(2.5);
+            gc.strokeLine(3, 4, 25, 24);
+        }
+
+        return canvas;
+    }
+    
+    public Button getSubtitleButton() {
+        return subtitleButton;
+    }
+
+    // Updates the icon to reflect the current subtitle state.
+    public void showSubtitlesEnabled(boolean enabled) {
+        subtitleButton.setGraphic(createSubtitleIcon(enabled));
+    }
+    
 
     // Little helper for different radius waves coming out of the speaker.
     private SVGPath audioWave(String content) {
