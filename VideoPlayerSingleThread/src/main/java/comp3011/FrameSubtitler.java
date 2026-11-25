@@ -8,6 +8,7 @@ import java.awt.RenderingHints;
 import java.awt.Shape;
 import java.awt.font.GlyphVector;
 import java.awt.image.BufferedImage;
+import java.util.List;
 
 import org.bytedeco.javacv.Frame;
 import org.bytedeco.javacv.Java2DFrameConverter;
@@ -19,6 +20,18 @@ public class FrameSubtitler extends FrameProcessor  {
 
 	    public FrameSubtitler(boolean enabled) {
 	        this.enabled = enabled;
+	       
+	        subtitleManager.setSubtitles(List.of(
+	            new Subtitle(0, 3, "This is the Ttemporaryy subtitle."), // Temporary subtitle data for testing playback synchronisation
+	            new Subtitle(4, 7, "subtitlllleeeee")
+	        ));
+	    }
+	    
+	    private final SubtitleManager subtitleManager =
+	            new SubtitleManager();
+	    
+	    public SubtitleManager getSubtitleManager() {
+	        return subtitleManager;
 	    }
 
 	    public boolean isEnabled() {
