@@ -23,7 +23,9 @@ public class FrameSubtitler extends FrameProcessor  {
 	       
 	        subtitleManager.setSubtitles(List.of(
 	            new Subtitle(0, 3, "This is the Ttemporaryy subtitle."), // Temporary subtitle data for testing playback synchronisation
-	            new Subtitle(4, 7, "subtitlllleeeee")
+	            new Subtitle(4, 7, "subtitlllleeeee"),
+	            new Subtitle(8,12, "Simpsons Trailer..."),
+	            new Subtitle(13, 17, "Testing, last subtitle..")
 	        ));
 	    }
 	    
@@ -47,7 +49,17 @@ public class FrameSubtitler extends FrameProcessor  {
 		
 		if (!enabled || frame.image == null) { 
             return;
-        }
+        }		
+		// Convert the frame timestamp from microseconds to seconds.
+		double time = info.timestampUs() / 1_000_000.0;
+		
+		// Retrieve the subtitle matching the current frame timestamp.
+		String text = subtitleManager.getSubtitle(time);
+		
+		// Skip image processing when there is no active subtitle.
+		if (text.isEmpty()) {
+		    return;
+		}
 
         BufferedImage image = converter.convert(frame);
 
@@ -62,7 +74,6 @@ public class FrameSubtitler extends FrameProcessor  {
                     RenderingHints.KEY_ANTIALIASING,
                     RenderingHints.VALUE_ANTIALIAS_ON);
 
-            String text = "This is a test subtitle.";
 
             int fontSize = Math.max(16, image.getHeight() / 22);
 
