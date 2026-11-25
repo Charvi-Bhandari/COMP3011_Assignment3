@@ -49,7 +49,11 @@ public class CommandLineController {
     }
     
     public List<FrameProcessor> getFrameProcessors() {
-        return List.copyOf(frameProcessors);
+        List<FrameProcessor> processors = new ArrayList<>(frameProcessors);
+        
+        processors.add(new FrameSubtitler(subtitlesRequested));
+        
+        return List.copyOf(processors);
     }
 
     public File getVideoFile() {
