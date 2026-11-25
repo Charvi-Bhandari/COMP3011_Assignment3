@@ -22,7 +22,7 @@ public class FrameSubtitler extends FrameProcessor  {
 	        this.enabled = enabled;
 	       
 	        subtitleManager.setSubtitles(List.of(
-	            new Subtitle(0, 3, "This is the Ttemporaryy subtitle."), // Temporary subtitle data for testing playback synchronisation
+	            new Subtitle(0, 3, "This is the Temporaryy subtitle."), // Temporary subtitle data for testing playback synchronisation
 	            new Subtitle(4, 7, "subtitlllleeeee"),
 	            new Subtitle(8,12, "Simpsons Trailer..."),
 	            new Subtitle(13, 17, "Testing, last subtitle..")
