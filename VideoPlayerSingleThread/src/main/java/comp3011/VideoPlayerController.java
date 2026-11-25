@@ -53,7 +53,14 @@ public class VideoPlayerController {
         view.getStopButton().setOnAction(_ -> stopAndExit());
         view.getAudioButton().setOnAction(_ -> toggleAudioOutput());
         view.showAudioEnabled(model.isAudioOutputEnabled());
+	     view.getSubtitleButton().setOnAction(_ -> toggleSubtitles()); // Connect the subtitle button to the model and display
+	     view.showSubtitlesEnabled(model.isSubtitlesEnabled());       
     }
+    
+    private void toggleSubtitles() {
+        model.toggleSubtitles();
+        view.showSubtitlesEnabled(model.isSubtitlesEnabled());  // Connecting existing toggle 
+    }															//(model enabled? checker)  and created icon
 
     public void installKeyboardShortcuts(Scene scene) {
         scene.addEventFilter(KeyEvent.KEY_PRESSED, event -> {
@@ -75,7 +82,12 @@ public class VideoPlayerController {
             } else if (event.getCode() == KeyCode.A) {
                 toggleAudioOutput();
                 event.consume();
+            } else if (event.getCode() == KeyCode.S) { // Both the button and keyboard shortcut use the same action.
+                toggleSubtitles();
+                event.consume();
             }
+            
+            
         });
     }
 
