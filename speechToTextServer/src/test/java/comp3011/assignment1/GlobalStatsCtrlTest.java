@@ -20,7 +20,7 @@ class GlobalStatsCtrlTest {
         globalStatsService.addUsage(25, 10);
 
         GlobalStatsController controller =
-                new GlobalStatsController(globalStatsService, null);
+                new GlobalStatsController(globalStatsService);
 
         GlobalStatsResponse response =
                 controller.getGlobalStats();

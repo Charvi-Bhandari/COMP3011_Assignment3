@@ -107,7 +107,7 @@ public class WhisperSubtitleService implements SubtitleService {
 
             usageService.addUsage(duration);
 
-            return responseProcessor.process(result);;
+            return responseProcessor.process(result);
 
         } catch (Exception e) {
             throw new RuntimeException(
