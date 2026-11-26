@@ -20,14 +20,7 @@ public class FrameSubtitler extends FrameProcessor  {
 
 	    public FrameSubtitler(boolean enabled) {
 	        this.enabled = enabled;
-	       
-	        subtitleManager.setSubtitles(List.of(
-	            new Subtitle(0, 3, "This is the Temporaryy subtitle."), // Temporary subtitle data for testing playback synchronisation
-	            new Subtitle(4, 7, "subtitlllleeeee"),
-	            new Subtitle(8,12, "Simpsons Trailer..."),	      
-	            new Subtitle(13, 17, "Testing, last subtitle.."),
-	            new Subtitle(20, 24, "SIKE! This is a longer subtitle that needs to be displayed across two lines.")
-	        ));
+
 	    }
 	    
 	    private final SubtitleManager subtitleManager =
