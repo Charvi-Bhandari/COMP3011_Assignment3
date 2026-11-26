@@ -22,6 +22,7 @@ public class WhisperSubtitleService implements SubtitleService {
     private final WebClient webClient;
     private final ObjectMapper objectMapper;
     private final SubtitleUsageService usageService;
+    private final WhisperResponseProcessor responseProcessor;
 
     @Value("${openai.api.key}")
     private String apiKey;
@@ -29,7 +30,8 @@ public class WhisperSubtitleService implements SubtitleService {
     public WhisperSubtitleService(
             WebClient.Builder webClientBuilder,
             ObjectMapper objectMapper,
-            SubtitleUsageService usageService) {
+            SubtitleUsageService usageService,
+            WhisperResponseProcessor responseProcessor) {
 
         this.webClient = webClientBuilder
                 .baseUrl("https://api.openai.com")
@@ -37,6 +39,7 @@ public class WhisperSubtitleService implements SubtitleService {
 
         this.objectMapper = objectMapper;
         this.usageService = usageService;
+        this.responseProcessor = responseProcessor;
     }
 
     @Override
@@ -104,7 +107,7 @@ public class WhisperSubtitleService implements SubtitleService {
 
             usageService.addUsage(duration);
 
-            return result;
+            return responseProcessor.process(result);;
 
         } catch (Exception e) {
             throw new RuntimeException(
