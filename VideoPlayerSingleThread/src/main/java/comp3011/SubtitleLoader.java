@@ -38,7 +38,7 @@ public class SubtitleLoader {
             }
 
             System.out.println("Requesting subtitles...");
-            List<Subtitle> subtitles = client.requestSubtitles(audioFile);
+            List<Subtitle> subtitles = requestWithRetry(audioFile);
 
             saveSubtitles(manager, subtitles, requestGeneration);
 
@@ -54,6 +54,23 @@ public class SubtitleLoader {
                 audioFile.delete(); // Delete the temporary audio file after use.
             }
         }
+    }
+    
+    private List<Subtitle> requestWithRetry(File audioFile) throws Exception {
+
+        while (!Thread.currentThread().isInterrupted()) {
+            try {
+                return client.requestSubtitles(audioFile);
+            } catch (InterruptedException e) {
+                throw e;
+            } catch (Exception e) {
+                System.err.println("Subtitle request failed. Retrying in 5 seconds.");
+                // Wait before retrying to avoid flooding the server.
+                Thread.sleep(5000);
+            }
+        }
+
+        throw new InterruptedException("Subtitle request cancelled");
     }
 
     // Only save subtitles if the request is still current.
