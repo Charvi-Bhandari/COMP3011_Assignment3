@@ -50,7 +50,11 @@ public class VideoPlayerModel {
     private volatile  long playbackGeneration = 0;
 
     private final List<FrameProcessor> frameProcessors;
+    
     private FrameSubtitler subtitleProcessor; // Reference to the subtitle processor
+    private final SubtitleLoader subtitleLoader = new SubtitleLoader();
+    private boolean subtitlesRequestedForVideo = false;
+    
     private final Queue<PendingAudio> pendingAudio =
             new java.util.concurrent.ConcurrentLinkedQueue<>();
     private final BiConsumer<Integer, Integer> videoSizeChangedHandler;
@@ -141,17 +145,51 @@ public class VideoPlayerModel {
     // Change the subtitle state without restarting playback
     // or modifying the list of active frame processors.
     public void toggleSubtitles() {
-        if (subtitleProcessor != null) {
-            subtitleProcessor.setEnabled(
-                    !subtitleProcessor.isEnabled());
+    	if (subtitleProcessor == null) {
+            return;
+        }
+
+        boolean enabled = !subtitleProcessor.isEnabled();
+        subtitleProcessor.setEnabled(enabled);
+        
+        if (enabled) {
+            requestSubtitles(); // Start loading subtitles when enabled for the first time.
         }
     }
+    
+    // Request subtitles once for the current video.
+    private void requestSubtitles() {
 
-    public void play(File file) {
+        if (videoFile == null
+                || subtitleProcessor == null
+                || subtitlesRequestedForVideo) { // Checking if video file, processor and request exists
+            return;
+        }
+
+        subtitlesRequestedForVideo = true; 
+
+        subtitleLoader.load(
+                videoFile,
+                subtitleProcessor.getSubtitleManager());
+    }
+
+    public void play(File file) {    	
+        subtitleLoader.cancel();
+        subtitlesRequestedForVideo = false; // Cancel subtitle requests from previous video.
+
+        if (subtitleProcessor != null) {
+            subtitleProcessor.getSubtitleManager().clear();
+        }
+    	
         videoFile = file;
         videoDurationUs = NO_SEEK_REQUEST;
         videoFrameDurationUs = 0;
         startPlayback(0, false, NO_SEEK_REQUEST);
+                
+        if (subtitleProcessor != null
+                && subtitleProcessor.isEnabled()) {
+            requestSubtitles(); // Only request subtitles when they are enabled.
+        }
     }
 
     public void startOver() {
@@ -213,6 +251,7 @@ public class VideoPlayerModel {
 
     public void shutdown() {                         // Stop the background worker and close playback resources when
                                                     // the application is shutting down.
+    	subtitleLoader.shutdown();
     	framePreparationExecutor.shutdownNow();
         closePlaybackResources();
         
