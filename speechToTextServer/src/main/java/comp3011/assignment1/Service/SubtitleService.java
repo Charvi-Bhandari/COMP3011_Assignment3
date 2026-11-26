@@ -7,6 +7,6 @@ import org.springframework.web.multipart.MultipartFile;
 public interface SubtitleService {
 	
 	// Transcribe audio and return text and time
-	CompletableFuture<String> generateSubtitles(MultipartFile audio);
+	CompletableFuture<String> generateSubtitles(MultipartFile audio); // async 
 
 }
