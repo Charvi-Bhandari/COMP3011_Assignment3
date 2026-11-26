@@ -35,6 +35,11 @@ public class AudioExtractor {
 
                
                 while ((frame = grabber.grabSamples()) != null) {
+                	
+                	// Stop extracting audio if the task has been cancelled.
+                    if (Thread.currentThread().isInterrupted()) {
+                        throw new InterruptedException("Audio extraction cancelled");
+                    }
 
                     recorder.recordSamples(
                             frame.sampleRate,  // Extract audio samples without processing video frames.
