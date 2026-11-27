@@ -8,56 +8,75 @@ import org.bytedeco.javacv.Frame;
 
 public class AudioExtractor {
 
-    public static File extractAudio(String videoPath) throws Exception {
-
-       
-        File audioFile = File.createTempFile("subtitle-audio-", ".wav");  // Create a temporary WAV file for transcription.
+    private static final long CHUNK_DURATION = 15_000_000L;
+    @FunctionalInterface
+    public interface ChunkHandler {
+        void handle(File audioFile, double offset) throws Exception;
+    }
+    public static void extractChunks(
+            String videoPath,
+            ChunkHandler handler) throws Exception {
         try (FFmpegFrameGrabber grabber =
                 new FFmpegFrameGrabber(videoPath)) {
 
             grabber.start();
-
             if (grabber.getAudioChannels() == 0) {
-                throw new IllegalStateException("Video has no audio."); // Check whether the video contains an audio track.
+                throw new IllegalStateException("Video has no audio.");
             }
+            Frame frame = grabber.grabSamples();
 
-            try (FFmpegFrameRecorder recorder =
-                    new FFmpegFrameRecorder(
-                            audioFile.getAbsolutePath(), 1)) {
-             
-                recorder.setFormat("wav"); 
-                recorder.setSampleRate(16000);
-                recorder.setAudioChannels(1); // Use mono audio to reduce the upload file size.
+            while (frame != null) {
 
-                recorder.start();
-
-                Frame frame;
-
-               
-                while ((frame = grabber.grabSamples()) != null) {
-                	
-                	// Stop extracting audio if the task has been cancelled.
-                    if (Thread.currentThread().isInterrupted()) {
-                        throw new InterruptedException("Audio extraction cancelled");
-                    }
-
-                    recorder.recordSamples(
-                            frame.sampleRate,  // Extract audio samples without processing video frames.
-                            frame.audioChannels,
-                            frame.samples);
+                if (Thread.currentThread().isInterrupted()) {
+                    throw new InterruptedException();
                 }
 
-                recorder.stop();
+                long chunkStart = frame.timestamp;
+
+                File audioFile = File.createTempFile(
+                        "subtitle-chunk-", ".wav");
+
+                try {
+                    try (FFmpegFrameRecorder recorder =
+                            new FFmpegFrameRecorder(
+                                    audioFile.getAbsolutePath(), 1)) {
+
+                        recorder.setFormat("wav");
+                        recorder.setSampleRate(16000);
+                        recorder.setAudioChannels(1);
+                        recorder.start();
+
+                        // Extract approximately 15 seconds of audio.
+                        while (frame != null &&
+                                frame.timestamp - chunkStart
+                                < CHUNK_DURATION) {
+
+                            if (Thread.currentThread().isInterrupted()) {
+                                throw new InterruptedException();
+                            }
+
+                            recorder.recordSamples(
+                                    frame.sampleRate,
+                                    frame.audioChannels,
+                                    frame.samples);
+
+                            frame = grabber.grabSamples();
+                        }
+
+                        recorder.stop();
+                    }
+
+                  
+                    handler.handle(
+                            audioFile,
+                            chunkStart / 1_000_000.0); // Send the chunk with its original timestamp.
+
+                } finally {
+                    audioFile.delete();
+                }
             }
 
             grabber.stop();
-
-            return audioFile;
-
-        } catch (Exception e) {
-           
-            audioFile.delete(); // Remove incomplete audio files if extraction fails.
-            throw e;
         }
     }
 }

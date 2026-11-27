@@ -1,6 +1,7 @@
 package comp3011;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -9,7 +10,7 @@ import java.util.concurrent.Future;
 public class SubtitleLoader {
 
     private final SubtitleClient client = new SubtitleClient();
-    private final ExecutorService executor = Executors.newSingleThreadExecutor();
+    private final ExecutorService executor = Executors.newSingleThreadExecutor(); // nanages background worker
 
     private Future<?> currentTask;
     private long generation = 0;
@@ -25,34 +26,46 @@ public class SubtitleLoader {
         currentTask = executor.submit(() -> loadSubtitles(videoFile, manager, requestGeneration));
     }
 
-    private void loadSubtitles(File videoFile, SubtitleManager manager, long requestGeneration) {
+    private void loadSubtitles(File videoFile,
+            SubtitleManager manager, long requestGeneration) {
 
-        File audioFile = null;
+        List<Subtitle> allSubtitles = new ArrayList<>();
 
         try {
-            System.out.println("Extracting audio...");
-            audioFile = AudioExtractor.extractAudio(videoFile.getAbsolutePath());
+            AudioExtractor.extractChunks(
+                    videoFile.getAbsolutePath(),
+                    (audioFile, offset) -> {
 
-            if (Thread.currentThread().isInterrupted()) {
-                return;
-            }
+                if (Thread.currentThread().isInterrupted()) {
+                    throw new InterruptedException();
+                }
 
-            System.out.println("Requesting subtitles...");
-            List<Subtitle> subtitles = requestWithRetry(audioFile);
+                // Request subtitles for the current audio chunk
+                List<Subtitle> subtitles = requestWithRetry(audioFile);
 
-            saveSubtitles(manager, subtitles, requestGeneration);
+                // Adjust timestamps to match the original video
+                for (Subtitle subtitle : subtitles) {
+                    allSubtitles.add(new Subtitle(
+                            subtitle.start() + offset,
+                            subtitle.end() + offset,
+                            subtitle.text()
+                    ));
+                }
+
+                // Update subtitles after each chunk
+                saveSubtitles(manager, allSubtitles,
+                        requestGeneration);
+
+                System.out.println("Chunk processed at: "
+                        + offset + " seconds");
+            });
 
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
 
         } catch (Exception e) {
-            System.err.println("Could not load subtitles: " + e.getMessage());
-
-        } finally {
-            
-            if (audioFile != null) {
-                audioFile.delete(); // Delete the temporary audio file after use.
-            }
+            System.err.println("Could not load subtitles: "
+                    + e.getMessage());
         }
     }
     
@@ -66,7 +79,7 @@ public class SubtitleLoader {
             } catch (Exception e) {
                 System.err.println("Subtitle request failed. Retrying in 5 seconds.");
                 // Wait before retrying to avoid flooding the server.
-                Thread.sleep(5000);
+                Thread.sleep(5000); // 5 Second delay in recieving stops
             }
         }
 

@@ -24,6 +24,6 @@ public class SubtitleManager {
 
     // Remove subtitles when they are no longer required.
     public void clear() {
-        subtitles = List.of();
+        subtitles = List.of(); 
     }
 }
