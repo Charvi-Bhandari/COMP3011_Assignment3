@@ -8,7 +8,7 @@ import org.bytedeco.javacv.Frame;
 
 public class AudioExtractor {
 
-    private static final long CHUNK_DURATION = 15_000_000L;
+	private static final long CHUNK_DURATION = 30_000_000L;
     @FunctionalInterface
     public interface ChunkHandler {
         void handle(File audioFile, double offset) throws Exception;
