@@ -1,0 +1,4 @@
+Updates made after Viva:
+Instead of implementing Cache, I fixed how the audio was sent to the Transcription Service.
+I tested 15 and 30 second chunks and found 30 second chunks to have much more accurate word matches.
+I also wrote the Readme File. 
